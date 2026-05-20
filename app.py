@@ -479,23 +479,94 @@ def registro():
 @login_required
 def dashboard():
     db = get_db()
-    total   = db.execute("SELECT COUNT(*) FROM ESPACIO").fetchone()[0]
-    libres  = db.execute("SELECT COUNT(*) FROM ESPACIO WHERE disponible=1").fetchone()[0]
-    activos = db.execute("SELECT COUNT(*) FROM REGISTRO_PARQUEO WHERE estado='Abierto'").fetchone()[0]
-    rec_hoy = db.execute("SELECT COALESCE(SUM(valor_pagado),0) FROM REGISTRO_PARQUEO WHERE fecha_salida=date('now') AND estado='Cerrado'").fetchone()[0]
-    t_hist  = db.execute("SELECT COUNT(*) FROM REGISTRO_PARQUEO WHERE estado='Cerrado'").fetchone()[0]
 
-    # Datos para gráficas usando la vista equivalente
-    disp    = view_disponibilidad_tipo(db)
-    r7      = db.execute("SELECT fecha_salida as fecha,COALESCE(SUM(valor_pagado),0) as total FROM REGISTRO_PARQUEO WHERE estado='Cerrado' AND fecha_salida>=date('now','-6 days') GROUP BY fecha_salida ORDER BY fecha_salida").fetchall()
-    recientes = db.execute("SELECT r.id_registro,r.placa,r.fecha_entrada,r.hora_entrada,r.estado,tv.nombre_tipo,e.codigo as espacio,u.nombre||' '||u.apellido as propietario FROM REGISTRO_PARQUEO r JOIN VEHICULO v ON r.placa=v.placa JOIN TIPO_VEHICULO tv ON v.id_tipo=tv.id_tipo JOIN ESPACIO e ON r.id_espacio=e.id_espacio JOIN USUARIO u ON v.id_usuario=u.id_usuario ORDER BY r.id_registro DESC LIMIT 6").fetchall()
+    # ── Datos generales (todos los roles) ─────────────────────────────────────
+    total  = db.execute("SELECT COUNT(*) FROM ESPACIO").fetchone()[0]
+    libres = db.execute("SELECT COUNT(*) FROM ESPACIO WHERE disponible=1").fetchone()[0]
+    disp   = view_disponibilidad_tipo(db)
+    chart_dona = json.dumps({
+        'labels':   [r['nombre_tipo'] for r in disp],
+        'ocupados': [r['espacios_ocupados'] for r in disp],
+        'libres':   [r['espacios_libres']   for r in disp],
+    })
+
+    # ── Datos personales del usuario (todos los roles) ────────────────────────
+    mis_vehiculos = db.execute("""
+        SELECT v.placa, tv.nombre_tipo, v.marca, v.color
+        FROM VEHICULO v JOIN TIPO_VEHICULO tv ON v.id_tipo=tv.id_tipo
+        WHERE v.id_usuario=?
+    """, (session['user_id'],)).fetchall()
+
+    # Vehículo activo: si el usuario tiene un vehículo dentro ahora mismo
+    vehiculo_activo = db.execute("""
+        SELECT r.id_registro, r.placa, r.fecha_entrada, r.hora_entrada,
+               e.codigo as espacio, tv.nombre_tipo,
+               CAST((julianday('now') - julianday(r.fecha_entrada||' '||r.hora_entrada))*24*60 AS INTEGER) as minutos
+        FROM REGISTRO_PARQUEO r
+        JOIN VEHICULO v  ON r.placa      = v.placa
+        JOIN TIPO_VEHICULO tv ON v.id_tipo = tv.id_tipo
+        JOIN ESPACIO e   ON r.id_espacio = e.id_espacio
+        WHERE v.id_usuario=? AND r.estado='Abierto'
+        LIMIT 1
+    """, (session['user_id'],)).fetchone()
+
+    mis_registros = db.execute("""
+        SELECT COUNT(*) FROM REGISTRO_PARQUEO r
+        JOIN VEHICULO v ON r.placa=v.placa
+        WHERE v.id_usuario=? AND r.estado='Cerrado'
+    """, (session['user_id'],)).fetchone()[0]
+
+    mi_gasto = db.execute("""
+        SELECT COALESCE(SUM(r.valor_pagado),0) FROM REGISTRO_PARQUEO r
+        JOIN VEHICULO v ON r.placa=v.placa
+        WHERE v.id_usuario=? AND r.estado='Cerrado'
+    """, (session['user_id'],)).fetchone()[0]
+
+    # Últimos 3 registros propios
+    mis_recientes = db.execute("""
+        SELECT r.placa, r.fecha_entrada, r.hora_entrada,
+               r.fecha_salida, r.hora_salida, r.valor_pagado, r.estado,
+               e.codigo as espacio, tv.nombre_tipo
+        FROM REGISTRO_PARQUEO r
+        JOIN VEHICULO v ON r.placa=v.placa
+        JOIN TIPO_VEHICULO tv ON v.id_tipo=tv.id_tipo
+        JOIN ESPACIO e ON r.id_espacio=e.id_espacio
+        WHERE v.id_usuario=?
+        ORDER BY r.id_registro DESC LIMIT 3
+    """, (session['user_id'],)).fetchall()
+
+    # ── Datos solo para Admin / Operario ──────────────────────────────────────
+    activos = 0; rec_hoy = 0; t_hist = 0; recientes = []; r7 = []
+    chart_linea = json.dumps({'labels': [], 'valores': []})
+    if session['rol'] in ('Administrador', 'Operario'):
+        activos = db.execute("SELECT COUNT(*) FROM REGISTRO_PARQUEO WHERE estado='Abierto'").fetchone()[0]
+        rec_hoy = db.execute("SELECT COALESCE(SUM(valor_pagado),0) FROM REGISTRO_PARQUEO WHERE fecha_salida=date('now') AND estado='Cerrado'").fetchone()[0]
+        t_hist  = db.execute("SELECT COUNT(*) FROM REGISTRO_PARQUEO WHERE estado='Cerrado'").fetchone()[0]
+        recientes = db.execute("""
+            SELECT r.id_registro, r.placa, r.fecha_entrada, r.hora_entrada, r.estado,
+                   tv.nombre_tipo, e.codigo as espacio, u.nombre||' '||u.apellido as propietario
+            FROM REGISTRO_PARQUEO r
+            JOIN VEHICULO v ON r.placa=v.placa
+            JOIN TIPO_VEHICULO tv ON v.id_tipo=tv.id_tipo
+            JOIN ESPACIO e ON r.id_espacio=e.id_espacio
+            JOIN USUARIO u ON v.id_usuario=u.id_usuario
+            ORDER BY r.id_registro DESC LIMIT 6
+        """).fetchall()
+        r7 = db.execute("""
+            SELECT fecha_salida as fecha, COALESCE(SUM(valor_pagado),0) as total
+            FROM REGISTRO_PARQUEO
+            WHERE estado='Cerrado' AND fecha_salida>=date('now','-6 days')
+            GROUP BY fecha_salida ORDER BY fecha_salida
+        """).fetchall()
+        chart_linea = json.dumps({'labels':[r['fecha'] for r in r7],'valores':[r['total'] for r in r7]})
+
     db.close()
-
-    chart_dona  = json.dumps({'labels':[r['nombre_tipo'] for r in disp],'ocupados':[r['espacios_ocupados'] for r in disp],'libres':[r['espacios_libres'] for r in disp]})
-    chart_linea = json.dumps({'labels':[r['fecha'] for r in r7],'valores':[r['total'] for r in r7]})
-    return render_template('dashboard.html', total=total, libres=libres, ocupados=total-libres,
-        activos=activos, recaudo_hoy=rec_hoy, total_hist=t_hist, recientes=recientes,
-        chart_dona=chart_dona, chart_linea=chart_linea)
+    return render_template('dashboard.html',
+        total=total, libres=libres, ocupados=total-libres,
+        activos=activos, recaudo_hoy=rec_hoy, total_hist=t_hist,
+        recientes=recientes, chart_dona=chart_dona, chart_linea=chart_linea,
+        mis_vehiculos=mis_vehiculos, vehiculo_activo=vehiculo_activo,
+        mis_registros=mis_registros, mi_gasto=mi_gasto, mis_recientes=mis_recientes)
 
 @app.route('/espacios')
 @login_required

@@ -3,6 +3,12 @@
 {% block page_title %}Dashboard{% endblock %}
 {% block breadcrumb %}Inicio / Dashboard{% endblock %}
 {% block content %}
+
+{# ══════════════════════════════════════════════════════════
+   VISTA ADMINISTRADOR / OPERARIO
+   ══════════════════════════════════════════════════════════ #}
+{% if session.rol in ['Administrador', 'Operario'] %}
+
 <div class="stats-grid">
   <div class="stat"><div class="icon-stat">🅿</div><div class="num">{{ total }}</div><div class="lbl">Espacios Totales</div></div>
   <div class="stat verde"><div class="icon-stat">✓</div><div class="num">{{ libres }}</div><div class="lbl">Libres Ahora</div></div>
@@ -23,22 +29,20 @@
 </div>
 
 <div class="card">
-  <div class="card-header">
-    <h3>⚡ Acciones rápidas</h3>
-  </div>
+  <div class="card-header"><h3>⚡ Acciones rápidas</h3></div>
   <div style="display:flex;gap:.8rem;flex-wrap:wrap">
     <a href="{{ url_for('espacios') }}" class="btn btn-ghost">🅿 Ver Espacios</a>
-    {% if session.rol in ['Administrador','Operario'] %}
     <a href="{{ url_for('checkin') }}" class="btn btn-success">↓ Registrar Entrada</a>
     <a href="{{ url_for('checkout') }}" class="btn btn-warning">↑ Registrar Salida</a>
+    <a href="{{ url_for('vehiculos') }}" class="btn btn-primary">🚗 Vehículos</a>
+    {% if session.rol == 'Administrador' %}
+    <a href="{{ url_for('reportes') }}" class="btn btn-primary">📈 Reportes</a>
     {% endif %}
-    <a href="{{ url_for('vehiculos') }}" class="btn btn-primary">🚗 Mis Vehículos</a>
-    <a href="{{ url_for('perfil') }}" class="btn btn-ghost">👤 Mi Perfil</a>
   </div>
 </div>
 
 <div class="card">
-  <div class="card-header"><h3>🕐 Últimas actividades</h3></div>
+  <div class="card-header"><h3>🕐 Últimas actividades del parqueadero</h3></div>
   <div class="table-wrap">
   <table>
     <thead><tr><th>#</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Estado</th><th>Propietario</th></tr></thead>
@@ -53,29 +57,164 @@
         <td><span class="badge badge-{{ r.estado.lower() }}">{{ r.estado }}</span></td>
         <td>{{ r.propietario }}</td>
       </tr>
+      {% else %}
+      <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:1.5rem">Sin actividad reciente</td></tr>
       {% endfor %}
     </tbody>
   </table>
   </div>
 </div>
 
+{# ══════════════════════════════════════════════════════════
+   VISTA USUARIO FINAL
+   ══════════════════════════════════════════════════════════ #}
+{% else %}
+
+{# Alerta si tiene vehículo activo dentro #}
+{% if vehiculo_activo %}
+<div style="background:linear-gradient(135deg,#1a3c6e,#0f2547);border-radius:14px;padding:1.5rem;margin-bottom:1.2rem;color:#fff">
+  <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <div style="font-size:3rem">🚗</div>
+    <div style="flex:1">
+      <div style="font-size:.8rem;color:#93c5fd;text-transform:uppercase;letter-spacing:.08em;font-weight:700">Vehículo dentro del parqueadero</div>
+      <div style="font-size:2.2rem;font-weight:900;letter-spacing:.1em;margin:.2rem 0">{{ vehiculo_activo.placa }}</div>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.9rem;color:#bfdbfe">
+        <span>🅿 Espacio <strong style="color:#fff">{{ vehiculo_activo.espacio }}</strong></span>
+        <span>🕐 Ingresó <strong style="color:#fff">{{ vehiculo_activo.hora_entrada[:5] }}</strong></span>
+        <span>⏱ <strong style="color:#fbbf24">
+          {% set h = (vehiculo_activo.minutos // 60) %}
+          {% set m = (vehiculo_activo.minutos % 60) %}
+          {{ h }}h {{ m }}min dentro
+        </strong></span>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-size:.78rem;color:#93c5fd;margin-bottom:.3rem">Tipo de vehículo</div>
+      <span style="background:rgba(245,166,35,.2);border:1px solid #f5a623;border-radius:99px;padding:.3rem .9rem;font-weight:700;color:#fbbf24">
+        {{ vehiculo_activo.nombre_tipo }}
+      </span>
+    </div>
+  </div>
+</div>
+{% else %}
+<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:1rem 1.5rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:.8rem">
+  <span style="font-size:1.5rem">✓</span>
+  <div>
+    <strong style="color:#166534">Sin vehículo activo</strong>
+    <p style="color:#4ade80;font-size:.85rem;margin:0">No tienes ningún vehículo dentro del parqueadero en este momento.</p>
+  </div>
+</div>
+{% endif %}
+
+{# Stats personales #}
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+  <div class="stat"><div class="icon-stat">🅿</div><div class="num">{{ libres }}</div><div class="lbl">Espacios libres</div></div>
+  <div class="stat verde"><div class="icon-stat">🚗</div><div class="num">{{ mis_vehiculos|length }}</div><div class="lbl">Mis vehículos</div></div>
+  <div class="stat dorado"><div class="icon-stat">📋</div><div class="num">{{ mis_registros }}</div><div class="lbl">Mis visitas</div></div>
+  <div class="stat naranja"><div class="icon-stat">💰</div><div class="num">${{ "{:,.0f}".format(mi_gasto) }}</div><div class="lbl">Total pagado</div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem">
+
+  {# Mis vehículos #}
+  <div class="card" style="margin:0">
+    <div class="card-header">
+      <h3>🚗 Mis vehículos registrados</h3>
+      <a href="{{ url_for('vehiculos') }}" class="btn btn-ghost btn-sm">Ver todos</a>
+    </div>
+    {% if mis_vehiculos %}
+      {% for v in mis_vehiculos %}
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid #f1f5f9">
+        <div>
+          <strong style="font-size:1rem">{{ v.placa }}</strong>
+          <span style="display:block;font-size:.78rem;color:#94a3b8">{{ v.marca or '' }} · {{ v.color or '' }}</span>
+        </div>
+        <span class="badge badge-libre">{{ v.nombre_tipo }}</span>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div style="text-align:center;padding:1.5rem;color:#94a3b8">
+        <p style="margin-bottom:.8rem">No tienes vehículos registrados</p>
+        <a href="{{ url_for('vehiculos') }}" class="btn btn-primary btn-sm">+ Registrar vehículo</a>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Disponibilidad del parqueadero #}
+  <div class="card" style="margin:0">
+    <div class="card-header">
+      <h3>🅿 Disponibilidad actual</h3>
+      <a href="{{ url_for('espacios') }}" class="btn btn-ghost btn-sm">Ver mapa</a>
+    </div>
+    <canvas id="chartDona" height="180"></canvas>
+  </div>
+
+</div>
+
+{# Acciones rápidas #}
+<div class="card">
+  <div class="card-header"><h3>⚡ Acciones rápidas</h3></div>
+  <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+    <a href="{{ url_for('espacios') }}" class="btn btn-ghost">🅿 Ver Espacios</a>
+    <a href="{{ url_for('vehiculos') }}" class="btn btn-primary">🚗 Mis Vehículos</a>
+    <a href="{{ url_for('historial') }}" class="btn btn-primary">🕐 Mi Historial</a>
+    <a href="{{ url_for('perfil') }}" class="btn btn-ghost">👤 Mi Perfil</a>
+  </div>
+</div>
+
+{# Historial reciente personal #}
+{% if mis_recientes %}
+<div class="card">
+  <div class="card-header">
+    <h3>🕐 Mis últimas visitas</h3>
+    <a href="{{ url_for('historial') }}" class="btn btn-ghost btn-sm">Ver todo</a>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Salida</th><th>Valor</th><th>Estado</th></tr></thead>
+    <tbody>
+      {% for r in mis_recientes %}
+      <tr>
+        <td><strong>{{ r.placa }}</strong></td>
+        <td>{{ r.nombre_tipo }}</td>
+        <td>{{ r.espacio }}</td>
+        <td>{{ r.fecha_entrada }} {{ r.hora_entrada[:5] }}</td>
+        <td>{{ (r.fecha_salida + ' ' + r.hora_salida[:5]) if r.fecha_salida else '—' }}</td>
+        <td style="font-weight:700;color:{% if r.valor_pagado %}#059669{% else %}#94a3b8{% endif %}">
+          {{ ('$'+"{:,.0f}".format(r.valor_pagado)) if r.valor_pagado else 'En curso' }}
+        </td>
+        <td><span class="badge badge-{{ r.estado.lower() }}">{{ r.estado }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endif %}
+
+{% endif %}{# fin if rol #}
+
+{# Gráficas Chart.js — siempre presentes pero chartLinea solo para admin/op #}
 <script>
 const dona = {{ chart_dona|safe }};
-const linea = {{ chart_linea|safe }};
 const colors = ['#1a3c6e','#059669','#ea580c','#7c3aed','#0891b2'];
+const ctxDona = document.getElementById('chartDona');
+if(ctxDona){
+  new Chart(ctxDona, {
+    type: 'doughnut',
+    data: {
+      labels: dona.labels,
+      datasets: [
+        { label:'Ocupados', data: dona.ocupados, backgroundColor: colors, borderWidth:0 },
+        { label:'Libres',   data: dona.libres,   backgroundColor: colors.map(c=>c+'44'), borderWidth:0 }
+      ]
+    },
+    options: { plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } }, cutout:'55%', responsive:true }
+  });
+}
 
-new Chart(document.getElementById('chartDona'), {
-  type: 'doughnut',
-  data: {
-    labels: dona.labels,
-    datasets: [
-      { label:'Ocupados', data: dona.ocupados, backgroundColor: colors, borderWidth:0 },
-      { label:'Libres',   data: dona.libres,   backgroundColor: colors.map(c=>c+'44'), borderWidth:0 }
-    ]
-  },
-  options: { plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } }, cutout:'55%', responsive:true }
-});
-
+{% if session.rol in ['Administrador','Operario'] %}
+const linea = {{ chart_linea|safe }};
 new Chart(document.getElementById('chartLinea'), {
   type: 'line',
   data: {
@@ -87,12 +226,13 @@ new Chart(document.getElementById('chartLinea'), {
   options: { plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ callback: v=>'$'+v.toLocaleString() } } }, responsive:true }
 });
 
-// Actualización automática de stats cada 30s
+// Actualizar stats automáticamente cada 30s
 setInterval(async () => {
   const r = await fetch('/api/stats');
   const d = await r.json();
   document.querySelectorAll('.stat')[1].querySelector('.num').textContent = d.libres;
   document.querySelectorAll('.stat')[2].querySelector('.num').textContent = d.ocupados;
 }, 30000);
+{% endif %}
 </script>
 {% endblock %}
