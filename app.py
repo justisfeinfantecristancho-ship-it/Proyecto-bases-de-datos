@@ -118,7 +118,7 @@ def _seed_data(db):
     """)
     a=pw("Admin123!"); b=pw("Op123!"); c=pw("User123!")
     for row in [('Justin','Infante','justisfe.infantecristancho@ecci.edu.co',a,1),
-                ('Jhon','Guzmán','jhone.guzmanrincón@ecci.edu.co',b,2),
+                ('Jhon','Guzmán','jhone.guzmansalinas@ecci.edu.co',b,2),
                 ('Alejandro','Jiménez','alejoe.jimenezperez@ecci.edu.co',c,3),
                 ('Carlos','Rodríguez','c.rodriguez@ecci.edu.co',c,3),
                 ('María','López','m.lopez@ecci.edu.co',c,3)]:

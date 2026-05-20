@@ -633,7 +633,7 @@ INSERT INTO TIPO_VEHICULO (nombre_tipo, descripcion) VALUES
 -- Contraseñas: Admin123!, Op123!, User123! (SHA-256)
 INSERT INTO USUARIO (nombre, apellido, correo, contrasena_hash, id_rol) VALUES
 ('Justin',    'Infante',   'justisfe.infantecristancho@ecci.edu.co', SHA2('Admin123!',256), 1),
-('Jhon',      'Guzmán',    'jhone.guzmanrincon@ecci.edu.co',         SHA2('Op123!',256),    2),
+('Jhon',      'Guzmán',    'jhone.guzmansalinas@ecci.edu.co',         SHA2('Op123!',256),    2),
 ('Alejandro', 'Jiménez',   'alejoe.jimenezperez@ecci.edu.co',        SHA2('User123!',256),  3),
 ('Carlos',    'Rodríguez', 'c.rodriguez@ecci.edu.co',                SHA2('User123!',256),  3),
 ('María',     'López',     'm.lopez@ecci.edu.co',                    SHA2('User123!',256),  3);
