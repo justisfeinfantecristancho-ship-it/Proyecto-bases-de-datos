@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NeoPark ECCI — Registro</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a3c6e,#0f2547);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.box{background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+h1{color:#1a3c6e;font-size:1.6rem;margin-bottom:1.5rem;text-align:center}
+.form-group{margin-bottom:1rem}
+label{font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:.3rem}
+input{width:100%;padding:.65rem 1rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem}
+input:focus{outline:none;border-color:#1a3c6e}
+.btn{width:100%;padding:.75rem;border:none;border-radius:8px;background:#1a3c6e;color:#fff;font-weight:700;font-size:.95rem;cursor:pointer;margin-top:.5rem}
+.alert{padding:.7rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.87rem}
+.alert-danger{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.alert-success{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.links{text-align:center;margin-top:1rem;font-size:.85rem;color:#64748b}
+.links a{color:#1a3c6e;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🅿 Crear cuenta</h1>
+  {% with msgs=get_flashed_messages(with_categories=true) %}
+    {% for cat,msg in msgs %}<div class="alert alert-{{cat}}">{{msg}}</div>{% endfor %}
+  {% endwith %}
+  <form method="post">
+    <div class="form-group"><label>Nombre</label><input name="nombre" required></div>
+    <div class="form-group"><label>Apellido</label><input name="apellido" required></div>
+    <div class="form-group"><label>Correo institucional</label><input type="email" name="correo" placeholder="usuario@ecci.edu.co" required></div>
+    <div class="form-group"><label>Contraseña</label><input type="password" name="contrasena" required></div>
+    <div class="form-group"><label>Confirmar contraseña</label><input type="password" name="confirmar" required></div>
+    <button class="btn">Registrarse</button>
+  </form>
+  <div class="links"><a href="{{ url_for('login') }}">← Volver al inicio de sesión</a></div>
+</div>
+</body>
+</html>

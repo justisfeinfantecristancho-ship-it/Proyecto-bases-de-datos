@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Vehículos — NeoPark{% endblock %}
+{% block content %}
+<div class="page-header"><h1>🚗 Vehículos Registrados</h1></div>
+
+<div class="card">
+  <h3>+ Registrar nuevo vehículo</h3>
+  <form method="post">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Placa *</label>
+        <input name="placa" placeholder="ABC123" required style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select name="id_tipo" required>
+          {% for t in tipos %}
+          <option value="{{ t.id_tipo }}">{{ t.nombre_tipo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Marca</label><input name="marca" placeholder="Chevrolet, Honda..."></div>
+      <div class="form-group"><label>Color</label><input name="color" placeholder="Blanco, Negro..."></div>
+    </div>
+    {% if session.rol in ['Administrador','Operario'] %}
+    <div class="form-group">
+      <label>Propietario</label>
+      <select name="id_usuario">
+        {% for u in usuarios %}<option value="{{ u.id_usuario }}">{{ u.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <button class="btn btn-success" type="submit">Registrar vehículo</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Lista de Vehículos</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Placa</th><th>Tipo</th><th>Marca</th><th>Color</th><th>Propietario</th></tr></thead>
+    <tbody>
+      {% for v in vehiculos %}
+      <tr>
+        <td><strong>{{ v.placa }}</strong></td>
+        <td>{{ v.nombre_tipo }}</td>
+        <td>{{ v.marca or '—' }}</td>
+        <td>{{ v.color or '—' }}</td>
+        <td>{{ v.propietario }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

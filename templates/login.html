@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NeoPark ECCI — Iniciar Sesión</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#1a3c6e 0%,#0f2547 60%,#f5a623 100%);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.login-logo{text-align:center;margin-bottom:2rem}
+.login-logo h1{font-size:2rem;color:#1a3c6e;font-weight:800}
+.login-logo h1 span{color:#f5a623}
+.login-logo p{color:#64748b;font-size:.85rem;margin-top:.3rem}
+.form-group{margin-bottom:1.2rem}
+label{font-size:.85rem;font-weight:600;color:#374151;display:block;margin-bottom:.4rem}
+input{width:100%;padding:.7rem 1rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.95rem;transition:border .2s}
+input:focus{outline:none;border-color:#1a3c6e;box-shadow:0 0 0 3px rgba(26,60,110,.1)}
+.btn{width:100%;padding:.8rem;border:none;border-radius:8px;background:#1a3c6e;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s;margin-top:.5rem}
+.btn:hover{background:#0f2547}
+.error{background:#fee2e2;color:#991b1b;padding:.7rem 1rem;border-radius:8px;font-size:.87rem;margin-bottom:1rem;border:1px solid #fca5a5}
+.links{text-align:center;margin-top:1.2rem;font-size:.85rem;color:#64748b}
+.links a{color:#1a3c6e;font-weight:600;text-decoration:none}
+.demo-hint{background:#f0f7ff;border-radius:8px;padding:.8rem;margin-bottom:1.2rem;font-size:.8rem;color:#1e40af}
+.demo-hint strong{display:block;margin-bottom:.3rem}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="login-logo">
+    <h1>🅿 Neo<span>Park</span></h1>
+    <p>Sistema de Gestión de Parqueadero · ECCI</p>
+  </div>
+  <div class="demo-hint">
+    <strong>👤 Cuentas de demostración:</strong>
+    Admin: justisfe.infantecristancho@ecci.edu.co / Admin123!<br>
+    Operario: jhone.guzmanrincón@ecci.edu.co / Op123!<br>
+    Usuario: alejoe.jimenezperez@ecci.edu.co / User123!
+  </div>
+  {% if error %}<div class="error">⚠ {{ error }}</div>{% endif %}
+  <form method="post">
+    <div class="form-group">
+      <label>Correo institucional</label>
+      <input type="email" name="correo" placeholder="usuario@ecci.edu.co" required autofocus>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" name="contrasena" placeholder="••••••••" required>
+    </div>
+    <button class="btn" type="submit">Ingresar</button>
+  </form>
+  <div class="links">¿No tienes cuenta? <a href="{{ url_for('registro') }}">Regístrate</a></div>
+</div>
+</body>
+</html>

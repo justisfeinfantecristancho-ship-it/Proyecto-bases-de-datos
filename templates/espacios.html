@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Espacios — NeoPark{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>🅿 Estado de Espacios</h1>
+  <p>Disponibilidad en tiempo real del parqueadero ECCI Sede Centro</p>
+</div>
+
+{% for tipo in ['Carro','Moto','Bicicleta'] %}
+<div class="card">
+  <h3>{% if tipo=='Carro' %}🚗{% elif tipo=='Moto' %}🏍{% else %}🚲{% endif %} {{ tipo }}s</h3>
+  <div class="espacio-grid">
+    {% for e in espacios if e.nombre_tipo == tipo %}
+    <div class="espacio-cell {{ 'libre' if e.disponible else 'ocupado' }}">
+      <div class="codigo">{{ e.codigo }}</div>
+      <div>{{ e.estado_texto }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+<div style="display:flex;gap:1rem;font-size:.85rem;margin-top:.5rem">
+  <span style="color:#065f46;font-weight:600">● Libre</span>
+  <span style="color:#991b1b;font-weight:600">● Ocupado</span>
+</div>
+{% endblock %}

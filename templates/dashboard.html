@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — NeoPark{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Inicio / Dashboard{% endblock %}
+{% block content %}
+<div class="stats-grid">
+  <div class="stat"><div class="icon-stat">🅿</div><div class="num">{{ total }}</div><div class="lbl">Espacios Totales</div></div>
+  <div class="stat verde"><div class="icon-stat">✓</div><div class="num">{{ libres }}</div><div class="lbl">Libres Ahora</div></div>
+  <div class="stat rojo"><div class="icon-stat">🚗</div><div class="num">{{ ocupados }}</div><div class="lbl">Ocupados</div></div>
+  <div class="stat dorado"><div class="icon-stat">💰</div><div class="num">${{ "{:,.0f}".format(recaudo_hoy) }}</div><div class="lbl">Recaudo Hoy</div></div>
+  <div class="stat naranja"><div class="icon-stat">📋</div><div class="num">{{ total_hist }}</div><div class="lbl">Registros Totales</div></div>
+</div>
+
+<div class="charts-grid">
+  <div class="chart-box">
+    <h3>🅿 Ocupación por tipo de vehículo</h3>
+    <canvas id="chartDona" height="200"></canvas>
+  </div>
+  <div class="chart-box">
+    <h3>📈 Recaudo últimos 7 días</h3>
+    <canvas id="chartLinea" height="200"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>⚡ Acciones rápidas</h3>
+  </div>
+  <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+    <a href="{{ url_for('espacios') }}" class="btn btn-ghost">🅿 Ver Espacios</a>
+    {% if session.rol in ['Administrador','Operario'] %}
+    <a href="{{ url_for('checkin') }}" class="btn btn-success">↓ Registrar Entrada</a>
+    <a href="{{ url_for('checkout') }}" class="btn btn-warning">↑ Registrar Salida</a>
+    {% endif %}
+    <a href="{{ url_for('vehiculos') }}" class="btn btn-primary">🚗 Mis Vehículos</a>
+    <a href="{{ url_for('perfil') }}" class="btn btn-ghost">👤 Mi Perfil</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3>🕐 Últimas actividades</h3></div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>#</th><th>Placa</th><th>Tipo</th><th>Espacio</th><th>Entrada</th><th>Estado</th><th>Propietario</th></tr></thead>
+    <tbody>
+      {% for r in recientes %}
+      <tr>
+        <td style="color:#94a3b8">{{ r.id_registro }}</td>
+        <td><strong>{{ r.placa }}</strong></td>
+        <td>{{ r.nombre_tipo }}</td>
+        <td><span class="badge badge-libre">{{ r.espacio }}</span></td>
+        <td>{{ r.fecha_entrada }} {{ r.hora_entrada[:5] }}</td>
+        <td><span class="badge badge-{{ r.estado.lower() }}">{{ r.estado }}</span></td>
+        <td>{{ r.propietario }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<script>
+const dona = {{ chart_dona|safe }};
+const linea = {{ chart_linea|safe }};
+const colors = ['#1a3c6e','#059669','#ea580c','#7c3aed','#0891b2'];
+
+new Chart(document.getElementById('chartDona'), {
+  type: 'doughnut',
+  data: {
+    labels: dona.labels,
+    datasets: [
+      { label:'Ocupados', data: dona.ocupados, backgroundColor: colors, borderWidth:0 },
+      { label:'Libres',   data: dona.libres,   backgroundColor: colors.map(c=>c+'44'), borderWidth:0 }
+    ]
+  },
+  options: { plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } }, cutout:'55%', responsive:true }
+});
+
+new Chart(document.getElementById('chartLinea'), {
+  type: 'line',
+  data: {
+    labels: linea.labels.length ? linea.labels : ['Sin datos'],
+    datasets: [{ label:'Recaudo ($)', data: linea.valores.length ? linea.valores : [0],
+      borderColor:'#1a3c6e', backgroundColor:'rgba(26,60,110,.08)',
+      fill:true, tension:0.4, pointBackgroundColor:'#f5a623', pointRadius:5 }]
+  },
+  options: { plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ callback: v=>'$'+v.toLocaleString() } } }, responsive:true }
+});
+
+// Actualización automática de stats cada 30s
+setInterval(async () => {
+  const r = await fetch('/api/stats');
+  const d = await r.json();
+  document.querySelectorAll('.stat')[1].querySelector('.num').textContent = d.libres;
+  document.querySelectorAll('.stat')[2].querySelector('.num').textContent = d.ocupados;
+}, 30000);
+</script>
+{% endblock %}

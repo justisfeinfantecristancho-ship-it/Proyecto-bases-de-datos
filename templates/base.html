@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}NeoPark ECCI{% endblock %}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{--azul:#1a3c6e;--dorado:#f5a623;--gris:#f1f5f9;--texto:#1e293b;--verde:#059669;--rojo:#dc2626;--naranja:#ea580c;--sidebar:220px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gris);color:var(--texto);display:flex;min-height:100vh}
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--azul);min-height:100vh;position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100}
+.sidebar-brand{padding:1.2rem 1rem;border-bottom:1px solid rgba(255,255,255,.1);text-align:center}
+.sidebar-brand h2{color:#fff;font-size:1.4rem;font-weight:800}
+.sidebar-brand h2 span{color:var(--dorado)}
+.sidebar-brand p{color:rgba(255,255,255,.5);font-size:.72rem;margin-top:.2rem}
+.sidebar nav{flex:1;padding:.8rem 0}
+.nav-section{padding:.4rem 1rem .2rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.35)}
+.sidebar a{display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:.85rem;transition:all .15s;border-left:3px solid transparent}
+.sidebar a:hover,.sidebar a.active{color:#fff;background:rgba(255,255,255,.08);border-left-color:var(--dorado)}
+.sidebar a .icon{font-size:1rem;width:20px;text-align:center}
+.sidebar-footer{padding:1rem;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-footer .user-info{color:rgba(255,255,255,.6);font-size:.78rem;margin-bottom:.6rem}
+.sidebar-footer .user-info strong{display:block;color:#fff;font-size:.85rem}
+.sidebar-footer .badge-rol{display:inline-block;padding:.15rem .5rem;border-radius:99px;font-size:.68rem;font-weight:700;background:var(--dorado);color:#fff;margin-bottom:.5rem}
+.sidebar-footer a{color:rgba(255,255,255,.5);font-size:.78rem;text-decoration:none}
+.sidebar-footer a:hover{color:#fff}
+.btn-logout{display:block;width:100%;padding:.55rem;background:rgba(220,38,38,.15);border:1px solid rgba(220,38,38,.4);border-radius:8px;color:#fca5a5;font-size:.82rem;font-weight:700;text-align:center;text-decoration:none;transition:all .2s;margin-top:.4rem}
+.btn-logout:hover{background:rgba(220,38,38,.35);color:#fff;border-color:#dc2626}
+.btn-logout-admin{background:rgba(245,166,35,.15);border-color:rgba(245,166,35,.5);color:#fde68a}
+.btn-logout-admin:hover{background:rgba(245,166,35,.35);color:#fff;border-color:var(--dorado)}
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:1.2rem;font-weight:700;color:var(--azul)}
+.topbar .breadcrumb{font-size:.8rem;color:#94a3b8}
+.content{padding:1.5rem;flex:1}
+/* CARDS */
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1.2rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;padding-bottom:.8rem;border-bottom:1px solid #f1f5f9}
+.card-header h3{font-size:.95rem;font-weight:700;color:var(--azul)}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.2rem}
+.stat{background:#fff;border-radius:12px;padding:1.2rem;box-shadow:0 1px 3px rgba(0,0,0,.06);border-top:4px solid var(--azul);transition:transform .2s}
+.stat:hover{transform:translateY(-2px)}
+.stat.verde{border-top-color:var(--verde)}
+.stat.rojo{border-top-color:var(--rojo)}
+.stat.dorado{border-top-color:var(--dorado)}
+.stat.naranja{border-top-color:var(--naranja)}
+.stat .num{font-size:2rem;font-weight:800;color:var(--azul);line-height:1}
+.stat.verde .num{color:var(--verde)}.stat.rojo .num{color:var(--rojo)}.stat.dorado .num{color:#b45309}.stat.naranja .num{color:var(--naranja)}
+.stat .lbl{font-size:.75rem;color:#94a3b8;margin-top:.3rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.stat .icon-stat{font-size:1.8rem;margin-bottom:.5rem}
+/* TABLAS */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{background:#f8fafc;color:#475569;padding:.65rem 1rem;text-align:left;font-weight:700;font-size:.75rem;letter-spacing:.05em;border-bottom:2px solid #e2e8f0}
+td{padding:.6rem 1rem;border-bottom:1px solid #f1f5f9;color:var(--texto)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+/* BADGES */
+.badge{padding:.2rem .6rem;border-radius:99px;font-size:.73rem;font-weight:700;display:inline-block}
+.badge-administrador{background:#dbeafe;color:#1d4ed8}
+.badge-operario{background:#fef9c3;color:#854d0e}
+.badge-usuario{background:#dcfce7;color:#166534}
+.badge-auditor{background:#f3e8ff;color:#7e22ce}
+.badge-supervisor{background:#ffedd5;color:#9a3412}
+.badge-abierto{background:#dbeafe;color:#1e40af}
+.badge-cerrado{background:#f1f5f9;color:#475569}
+.badge-libre{background:#dcfce7;color:#166534}
+.badge-ocupado{background:#fee2e2;color:#991b1b}
+/* FORMS */
+.form-group{margin-bottom:1rem}
+label{font-size:.82rem;font-weight:600;color:#374151;display:block;margin-bottom:.35rem}
+input,select,textarea{width:100%;padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;color:var(--texto);transition:border .15s,box-shadow .15s;background:#fff}
+input:focus,select:focus{outline:none;border-color:var(--azul);box-shadow:0 0 0 3px rgba(26,60,110,.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+/* BUTTONS */
+.btn{padding:.55rem 1.1rem;border:none;border-radius:8px;cursor:pointer;font-size:.84rem;font-weight:600;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap}
+.btn-primary{background:var(--azul);color:#fff}.btn-primary:hover{background:#0f2547}
+.btn-success{background:var(--verde);color:#fff}.btn-success:hover{background:#047857}
+.btn-danger{background:var(--rojo);color:#fff}.btn-danger:hover{background:#b91c1c}
+.btn-warning{background:var(--naranja);color:#fff}.btn-warning:hover{background:#c2410c}
+.btn-ghost{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}.btn-ghost:hover{background:#e2e8f0}
+.btn-sm{padding:.3rem .7rem;font-size:.78rem}
+/* ALERTS */
+.alert{padding:.8rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.86rem;display:flex;align-items:center;gap:.6rem;border-left:4px solid}
+.alert-success{background:#f0fdf4;color:#166534;border-color:var(--verde)}
+.alert-danger{background:#fef2f2;color:#991b1b;border-color:var(--rojo)}
+.alert-warning{background:#fffbeb;color:#92400e;border-color:#f59e0b}
+/* ESPACIOS */
+.espacio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.6rem}
+.espacio-cell{border-radius:8px;padding:.7rem .4rem;text-align:center;font-size:.75rem;font-weight:700;border:2px solid transparent;cursor:default;transition:transform .15s}
+.espacio-cell:hover{transform:scale(1.05)}
+.espacio-cell.libre{background:#dcfce7;border-color:#86efac;color:#166534}
+.espacio-cell.ocupado{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+.espacio-cell .cod{font-size:.95rem;font-weight:800;margin-bottom:.2rem}
+/* TICKET */
+.ticket{background:#fff;border:2px dashed #e2e8f0;border-radius:12px;padding:1.5rem;max-width:420px;margin:0 auto 1.2rem;text-align:center}
+.ticket .ticket-logo{font-size:2rem;margin-bottom:.3rem}
+.ticket h3{color:var(--azul);font-size:1.1rem;margin-bottom:.2rem}
+.ticket .ticket-placa{font-size:2.2rem;font-weight:900;color:var(--azul);letter-spacing:.1em;margin:1rem 0}
+.ticket-row{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid #f1f5f9;font-size:.85rem}
+.ticket-row .label{color:#94a3b8}
+.ticket-row .value{font-weight:600}
+.ticket-total{font-size:1.6rem;font-weight:900;color:var(--verde);margin-top:1rem}
+/* CHARTS */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem}
+.chart-box{background:#fff;border-radius:12px;padding:1.2rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.chart-box h3{font-size:.88rem;font-weight:700;color:var(--azul);margin-bottom:1rem}
+/* SEARCH BAR */
+.search-bar{display:flex;gap:.6rem;align-items:center;margin-bottom:1rem}
+.search-bar input{max-width:260px}
+/* TIEMPO BADGE */
+.tiempo-badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.75rem;font-weight:600}
+.tiempo-ok{background:#dcfce7;color:#166534}
+.tiempo-warn{background:#fef9c3;color:#854d0e}
+.tiempo-alert{background:#fee2e2;color:#991b1b}
+</style>
+</head>
+<body>
+{% if session.get('user_id') %}
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <h2>🅿 Neo<span>Park</span></h2>
+    <p>Universidad ECCI</p>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <a href="{{ url_for('dashboard') }}" {% if request.endpoint=='dashboard' %}class="active"{% endif %}><span class="icon">📊</span>Dashboard</a>
+    <a href="{{ url_for('espacios') }}" {% if request.endpoint=='espacios' %}class="active"{% endif %}><span class="icon">🅿</span>Espacios</a>
+
+    {% if session.rol in ['Administrador','Operario'] %}
+    <div class="nav-section">Operaciones</div>
+    <a href="{{ url_for('checkin') }}" {% if request.endpoint=='checkin' %}class="active"{% endif %}><span class="icon">↓</span>Check-In</a>
+    <a href="{{ url_for('checkout') }}" {% if request.endpoint=='checkout' %}class="active"{% endif %}><span class="icon">↑</span>Check-Out</a>
+    {% endif %}
+
+    <div class="nav-section">Vehículos</div>
+    <a href="{{ url_for('vehiculos') }}" {% if request.endpoint=='vehiculos' %}class="active"{% endif %}><span class="icon">🚗</span>Vehículos</a>
+    <a href="{{ url_for('historial') }}" {% if request.endpoint=='historial' %}class="active"{% endif %}><span class="icon">🕐</span>Mi Historial</a>
+
+    {% if session.rol == 'Administrador' %}
+    <div class="nav-section">Administración</div>
+    <a href="{{ url_for('reportes') }}" {% if request.endpoint=='reportes' %}class="active"{% endif %}><span class="icon">📈</span>Reportes</a>
+    <a href="{{ url_for('tarifas') }}" {% if request.endpoint=='tarifas' %}class="active"{% endif %}><span class="icon">💰</span>Tarifas</a>
+    <a href="{{ url_for('usuarios') }}" {% if request.endpoint=='usuarios' %}class="active"{% endif %}><span class="icon">👥</span>Usuarios</a>
+    <a href="{{ url_for('auditoria') }}" {% if request.endpoint=='auditoria' %}class="active"{% endif %}><span class="icon">🔒</span>Auditoría</a>
+    {% endif %}
+
+    <div class="nav-section">Cuenta</div>
+    <a href="{{ url_for('perfil') }}" {% if request.endpoint=='perfil' %}class="active"{% endif %}><span class="icon">👤</span>Mi Perfil</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <strong>{{ session.nombre }}</strong>
+      <span class="badge-rol">{{ session.rol }}</span>
+    </div>
+    {% if session.rol == 'Administrador' %}
+    <a href="{{ url_for('logout') }}" class="btn-logout btn-logout-admin"
+       onclick="return confirm('¿Cerrar sesión como Administrador?')">
+      🔐 Cerrar sesión (Admin)
+    </a>
+    {% else %}
+    <a href="{{ url_for('logout') }}" class="btn-logout">⬡ Cerrar sesión</a>
+    {% endif %}
+  </div>
+</aside>
+{% endif %}
+
+<main class="main">
+  <div class="topbar">
+    <h1>{% block page_title %}NeoPark ECCI{% endblock %}</h1>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <span class="breadcrumb">{% block breadcrumb %}{% endblock %}</span>
+      {% if session.get('user_id') %}
+      <a href="{{ url_for('logout') }}"
+         style="padding:.4rem .9rem;border-radius:7px;font-size:.8rem;font-weight:700;text-decoration:none;border:1px solid;white-space:nowrap;transition:all .2s;{% if session.rol == 'Administrador' %}background:#fffbeb;border-color:#f59e0b;color:#92400e;{% else %}background:#f1f5f9;border-color:#e2e8f0;color:#475569;{% endif %}"
+         onclick="return confirm('¿Desea cerrar sesión?')">
+        {% if session.rol == 'Administrador' %}🔐 Salir (Admin){% else %}⬡ Salir{% endif %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="content">
+    {% for cat in ['success','danger','warning'] %}
+      {% for msg in get_flashed_messages(category_filter=[cat]) %}
+      <div class="alert alert-{{ cat }}">
+        {% if cat=='success' %}✓{% elif cat=='danger' %}✗{% else %}⚠{% endif %} {{ msg }}
+      </div>
+      {% endfor %}
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+</body>
+</html>
